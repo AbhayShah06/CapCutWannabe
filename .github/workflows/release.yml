@@ -1,0 +1,45 @@
+name: Build Windows installer
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.18
+      - run: bun install --frozen-lockfile
+      - run: bun run build:desktop-web
+      - name: Require the bundled local editor server
+        shell: pwsh
+        run: |
+          if (!(Test-Path 'apps/web/.next/standalone/apps/web/server.js')) {
+            throw 'Desktop server is missing. Refusing to create a broken installer.'
+          }
+      - run: bunx electron-builder --win nsis
+      - name: Verify packaged server and launch
+        shell: pwsh
+        run: |
+          $server = 'release-final/win-unpacked/resources/server/apps/web/server.js'
+          if (!(Test-Path $server)) { throw "Packaged server is missing: $server" }
+          $app = Start-Process 'release-final/win-unpacked/CapCutWannabe.exe' -PassThru
+          Start-Sleep -Seconds 20
+          if ($app.HasExited) { throw "Packaged app exited during startup with $($app.ExitCode)" }
+          Stop-Process -Id $app.Id -Force
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CapCutWannabe-Windows
+          path: release-final/CapCutWannabe-Setup-*.exe
+      - name: Add installer to tagged release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-final/CapCutWannabe-Setup-*.exe
