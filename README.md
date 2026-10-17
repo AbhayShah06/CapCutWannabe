@@ -23,6 +23,9 @@ Windows may show a SmartScreen warning because the installer is not code-signed 
 - Persistent local projects that survive app updates and uninstall/reinstall unless app data is manually removed
 - Fully dark desktop interface with practical first-run guidance
 - No remote font or analytics dependency in the desktop app
+- Built-in update notifications that link to the latest GitHub installer without interrupting editing
+- Remembered window size and maximized state between launches
+- A visible recovery message when the local editor cannot start
 
 ## Current limitations
 

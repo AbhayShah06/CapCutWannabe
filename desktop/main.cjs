@@ -1,10 +1,83 @@
-const { app, BrowserWindow, shell } = require("electron");
+const { app, BrowserWindow, dialog, net: electronNet, shell } = require("electron");
 const { fork } = require("node:child_process");
+const fs = require("node:fs");
 const path = require("node:path");
 const net = require("node:net");
 
+const RELEASES_URL = "https://github.com/AbhayShah06/CapCutWannabe/releases/latest";
+const LATEST_RELEASE_API = "https://api.github.com/repos/AbhayShah06/CapCutWannabe/releases/latest";
+
 let serverProcess;
 let mainWindow;
+
+function windowStatePath() {
+  return path.join(app.getPath("userData"), "window-state.json");
+}
+
+function loadWindowState() {
+  try {
+    const state = JSON.parse(fs.readFileSync(windowStatePath(), "utf8"));
+    if (![state.width, state.height].every(Number.isFinite)) return {};
+    return {
+      width: Math.max(1040, state.width),
+      height: Math.max(700, state.height),
+      ...(Number.isFinite(state.x) ? { x: state.x } : {}),
+      ...(Number.isFinite(state.y) ? { y: state.y } : {}),
+      maximized: Boolean(state.maximized),
+    };
+  } catch {
+    return {};
+  }
+}
+
+function saveWindowState(window) {
+  if (!window || window.isDestroyed()) return;
+  const bounds = window.getNormalBounds();
+  fs.mkdirSync(app.getPath("userData"), { recursive: true });
+  fs.writeFileSync(
+    windowStatePath(),
+    JSON.stringify({ ...bounds, maximized: window.isMaximized() }),
+  );
+}
+
+function versionParts(version) {
+  return version.replace(/^v/, "").split(".").map((part) => Number.parseInt(part, 10) || 0);
+}
+
+function isNewerVersion(candidate, current) {
+  const next = versionParts(candidate);
+  const installed = versionParts(current);
+  for (let index = 0; index < Math.max(next.length, installed.length); index += 1) {
+    if ((next[index] || 0) !== (installed[index] || 0)) {
+      return (next[index] || 0) > (installed[index] || 0);
+    }
+  }
+  return false;
+}
+
+async function checkForUpdates() {
+  if (!app.isPackaged) return;
+  try {
+    const response = await electronNet.fetch(LATEST_RELEASE_API, {
+      headers: { Accept: "application/vnd.github+json" },
+    });
+    if (!response.ok) return;
+    const release = await response.json();
+    if (!release.tag_name || !isNewerVersion(release.tag_name, app.getVersion())) return;
+    const result = await dialog.showMessageBox(mainWindow, {
+      type: "info",
+      title: "CapCutWannabe update available",
+      message: `Version ${release.tag_name.replace(/^v/, "")} is ready`,
+      detail: "Download the newest installer from GitHub. Your local projects and app data will remain in place.",
+      buttons: ["Download update", "Later"],
+      defaultId: 0,
+      cancelId: 1,
+    });
+    if (result.response === 0) await shell.openExternal(RELEASES_URL);
+  } catch {
+    // Editing must never be blocked by an unavailable update service.
+  }
+}
 
 function getFreePort() {
   return new Promise((resolve, reject) => {
@@ -73,9 +146,13 @@ async function createWindow() {
   startServer(port);
   await waitForServer(port);
 
+  const savedState = loadWindowState();
+
   mainWindow = new BrowserWindow({
-    width: 1480,
-    height: 940,
+	width: savedState.width || 1480,
+	height: savedState.height || 940,
+	...(Number.isFinite(savedState.x) ? { x: savedState.x } : {}),
+	...(Number.isFinite(savedState.y) ? { y: savedState.y } : {}),
     minWidth: 1040,
     minHeight: 700,
     show: false,
@@ -101,7 +178,12 @@ async function createWindow() {
   });
 
   await mainWindow.loadURL(`http://127.0.0.1:${port}/projects`);
-  mainWindow.once("ready-to-show", () => mainWindow.show());
+  mainWindow.once("ready-to-show", () => {
+    if (savedState.maximized) mainWindow.maximize();
+    mainWindow.show();
+    void checkForUpdates();
+  });
+  mainWindow.on("close", () => saveWindowState(mainWindow));
 }
 
 const hasSingleInstanceLock = app.requestSingleInstanceLock();
@@ -115,6 +197,10 @@ app.on("second-instance", () => {
 
 app.whenReady().then(createWindow).catch((error) => {
   console.error(error);
+	dialog.showErrorBox(
+		"CapCutWannabe could not start",
+		"The local editor failed to start. Restart the app. If the problem continues, install the latest release from GitHub.",
+	);
   app.quit();
 });
 
