@@ -174,6 +174,7 @@ function resolveVisualState({
 		localTime,
 		transform,
 		opacity,
+		adjustments: params.adjustments ?? { brightness: 100, contrast: 100, saturation: 100 },
 		effectPasses: resolveEffectPassGroups({
 			effects: params.effects,
 			animations: params.animations,

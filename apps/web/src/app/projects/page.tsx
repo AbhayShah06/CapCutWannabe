@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { KeyboardEvent, MouseEvent } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { EditorCore } from "@/core";
 import { MigrationDialog } from "@/project/components/migration-dialog";
@@ -21,7 +21,6 @@ import type {
 	TProjectSortKey,
 	TProjectSortOption,
 } from "@/project/types";
-import { formatTimecode, mediaTimeToSeconds } from "opencut-wasm";
 import { formatDate } from "@/utils/date";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -67,19 +66,8 @@ import { ProjectInfoDialog } from "@/project/components/project-info-dialog";
 import { RenameProjectDialog } from "@/project/components/rename-project-dialog";
 import { cn } from "@/utils/ui";
 import { ChangelogNotification } from "@/changelog/components/changelog-notification";
-const formatProjectDuration = ({
-	duration,
-}: {
-	duration: number | undefined;
-}): string | null => {
-	if (duration === undefined) {
-		return null;
-	}
-
-	const durationSeconds = mediaTimeToSeconds({ time: duration });
-	const format = durationSeconds >= 3600 ? "HH:MM:SS" : "MM:SS";
-	return formatTimecode({ time: duration, format }) ?? "";
-};
+import { PROJECT_TEMPLATES } from "@/project/templates";
+import { formatProjectDuration } from "@/project/format-duration";
 
 const VIEW_MODE_OPTIONS = [
 	{ mode: "grid" as const, icon: GridViewIcon, label: "Grid view" },
@@ -138,39 +126,19 @@ export default function ProjectsPage() {
 	);
 }
 
-const QUICK_STARTS = [
-	{
-		name: "Landscape video",
-		detail: "YouTube, presentations, desktop",
-		size: { width: 1920, height: 1080 },
-		preview: "aspect-video w-12",
-	},
-	{
-		name: "Vertical video",
-		detail: "Shorts, Reels, TikTok",
-		size: { width: 1080, height: 1920 },
-		preview: "aspect-[9/16] h-10",
-	},
-	{
-		name: "Square video",
-		detail: "Social posts and promos",
-		size: { width: 1080, height: 1080 },
-		preview: "aspect-square h-10",
-	},
-] as const;
-
 function QuickStart() {
 	const editor = useEditor();
 	const router = useRouter();
 	const [creating, setCreating] = useState<string | null>(null);
 
-	const create = async (starter: (typeof QUICK_STARTS)[number]) => {
+	const create = async (starter: (typeof PROJECT_TEMPLATES)[number]) => {
 		if (creating) return;
 		setCreating(starter.name);
 		try {
 			const projectId = await editor.project.createNewProject({
 				name: starter.name,
-				canvasSize: starter.size,
+				canvasSize: starter.canvasSize,
+				templateId: starter.id,
 			});
 			router.push(`/editor/${projectId}`);
 		} catch (error) {
@@ -182,31 +150,41 @@ function QuickStart() {
 	};
 
 	return (
-		<section className="mx-4 mb-2 rounded-2xl border bg-card/60 p-4 shadow-sm">
+		<section className="mx-4 mb-2 overflow-hidden rounded-2xl border bg-card/60 shadow-sm">
+			<div className="h-px bg-gradient-to-r from-transparent via-sky-400/70 to-transparent" />
+			<div className="p-4">
 			<div className="mb-3 flex items-end justify-between gap-4">
 				<div>
-					<h2 className="text-base font-semibold">Start creating</h2>
+					<h2 className="text-base font-semibold">Start with a format or story</h2>
 					<p className="text-muted-foreground text-sm">
-						Choose a format. You can change it later.
+						Templates include an editable example timeline, not locked assets.
 					</p>
 				</div>
 				<span className="text-muted-foreground hidden text-xs sm:block">
 					Saved locally as you work
 				</span>
 			</div>
-			<div className="grid gap-2 sm:grid-cols-3">
-				{QUICK_STARTS.map((starter) => (
+			<div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
+				{PROJECT_TEMPLATES.map((starter) => {
+					const ratio = starter.canvasSize.width / starter.canvasSize.height;
+					const previewClass =
+						ratio > 1.2 ? "aspect-video w-12" : ratio < 0.8 ? "aspect-[9/16] h-10" : "aspect-square h-10";
+					return (
 					<button
 						type="button"
 						key={starter.name}
 						disabled={Boolean(creating)}
 						onClick={() => create(starter)}
-						className="group flex min-h-20 items-center gap-3 rounded-xl border bg-background/70 p-3 text-left transition hover:-translate-y-0.5 hover:border-foreground/25 hover:bg-accent/50 active:translate-y-0 disabled:opacity-60"
+						className="group relative flex min-h-28 flex-col justify-between overflow-hidden rounded-xl border bg-background/70 p-3 text-left transition duration-200 hover:-translate-y-0.5 hover:border-foreground/25 hover:shadow-lg active:translate-y-0 disabled:opacity-60"
 					>
-						<span className="flex h-12 w-16 shrink-0 items-center justify-center rounded-lg bg-muted">
-							<span className={`rounded-sm border border-foreground/35 bg-foreground/10 ${starter.preview}`} />
+						<span className={`absolute inset-0 bg-gradient-to-br opacity-45 transition group-hover:opacity-70 ${starter.accent}`} />
+						<span className="relative flex w-full items-start justify-between gap-2">
+							<span className="rounded-full border border-white/10 bg-black/20 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-white/80">
+								{starter.category}
+							</span>
+							<span className={`rounded-sm border border-white/40 bg-white/10 ${previewClass}`} />
 						</span>
-						<span className="min-w-0">
+						<span className="relative min-w-0">
 							<span className="block truncate text-sm font-medium">
 								{creating === starter.name ? "Creating..." : starter.name}
 							</span>
@@ -215,7 +193,9 @@ function QuickStart() {
 							</span>
 						</span>
 					</button>
-				))}
+					);
+				})}
+			</div>
 			</div>
 		</section>
 	);
@@ -223,6 +203,27 @@ function QuickStart() {
 
 function ProjectsHeader() {
 	const { viewMode, isHydrated, setViewMode } = useProjectsStore();
+	const editor = useEditor();
+	const router = useRouter();
+	const fileInputRef = useRef<HTMLInputElement>(null);
+	const [isImporting, setIsImporting] = useState(false);
+
+	const importProject = async (file: File) => {
+		if (isImporting) return;
+		setIsImporting(true);
+		try {
+			const projectId = await editor.project.importProjectFile({ file });
+			toast.success("Project imported", { description: "The timeline and media are ready to edit." });
+			router.push(`/editor/${projectId}`);
+		} catch (error) {
+			toast.error("Could not import project", {
+				description: error instanceof Error ? error.message : "Please choose a .ccwproject file",
+			});
+		} finally {
+			setIsImporting(false);
+			if (fileInputRef.current) fileInputRef.current.value = "";
+		}
+	};
 
 	return (
 		<header className="sticky top-0 z-20 px-8 bg-background flex flex-col gap-2">
@@ -268,6 +269,20 @@ function ProjectsHeader() {
 
 				<div className="flex items-center gap-3 md:gap-4">
 					<SearchBar className="hidden md:block" />
+					<input
+						ref={fileInputRef}
+						type="file"
+						accept=".ccwproject,application/json"
+						className="hidden"
+						onChange={(event) => {
+							const file = event.target.files?.[0];
+							if (file) void importProject(file);
+						}}
+					/>
+					<Button variant="outline" className="gap-2" disabled={isImporting} onClick={() => fileInputRef.current?.click()}>
+						<HugeiconsIcon icon={ArrowDown02Icon} className="size-4" />
+						<span className="hidden sm:inline">{isImporting ? "Importing..." : "Import project"}</span>
+					</Button>
 					<NewProjectButton />
 				</div>
 			</div>
@@ -632,7 +647,7 @@ function ProjectItem({
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 	const [isInfoDialogOpen, setIsInfoDialogOpen] = useState(false);
 	const editor = useEditor();
-	const durationLabel = formatProjectDuration({ duration: project.duration });
+	const durationLabel = formatProjectDuration(project.duration);
 	const isMultiSelect = selectedProjectCount > 1;
 	const isGridView = viewMode === "grid";
 

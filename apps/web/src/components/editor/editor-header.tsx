@@ -15,7 +15,6 @@ import { DeleteProjectDialog } from "@/project/components/delete-project-dialog"
 import { useRouter } from "next/navigation";
 import { FaDiscord } from "react-icons/fa6";
 import { ExportButton } from "./export-button";
-import { FeedbackPopover } from "@/feedback/components/feedback-popover";
 import { ThemeToggle } from "../theme-toggle";
 import { DEFAULT_LOGO_URL } from "@/site/brand";
 import { SOCIAL_LINKS } from "@/site/social";
@@ -26,6 +25,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { ShortcutsDialog } from "@/actions/components/shortcuts-dialog";
 import Image from "next/image";
 import { cn } from "@/utils/ui";
+import { FileArchive, Share2 } from "lucide-react";
 
 export function EditorHeader() {
 	return (
@@ -35,11 +35,53 @@ export function EditorHeader() {
 				<EditableProjectName />
 			</div>
 			<nav className="flex items-center gap-2">
-				<FeedbackPopover />
+				<ProjectShareMenu />
 				<ExportButton />
 				<ThemeToggle />
 			</nav>
 		</header>
+	);
+}
+
+function ProjectShareMenu() {
+	const editor = useEditor();
+	const project = useEditor((e) => e.project.getActiveOrNull());
+	const [isPreparing, setIsPreparing] = useState(false);
+
+	const shareProject = async () => {
+		if (!project || isPreparing) return;
+		setIsPreparing(true);
+		try {
+			await editor.project.exportProjectFile({ id: project.metadata.id });
+			toast.success("Project file ready", {
+				description: "Send the .ccwproject file to anyone using CapCutWannabe.",
+			});
+		} catch (error) {
+			toast.error("Could not create project file", {
+				description: error instanceof Error ? error.message : "Please try again",
+			});
+		} finally {
+			setIsPreparing(false);
+		}
+	};
+
+	return (
+		<DropdownMenu>
+			<DropdownMenuTrigger asChild>
+				<Button variant="outline" size="sm" className="gap-1.5">
+					<Share2 className="size-3.5" />
+					Share
+				</Button>
+			</DropdownMenuTrigger>
+			<DropdownMenuContent align="end" className="w-64">
+				<DropdownMenuItem onClick={shareProject} disabled={!project || isPreparing} icon={<FileArchive className="size-4" />}>
+					<div>
+						<div>{isPreparing ? "Packing project..." : "Share editable project"}</div>
+						<div className="text-muted-foreground mt-0.5 text-xs font-normal">Includes the timeline and imported media</div>
+					</div>
+				</DropdownMenuItem>
+			</DropdownMenuContent>
+		</DropdownMenu>
 	);
 }
 

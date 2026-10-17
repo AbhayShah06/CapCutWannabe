@@ -10,6 +10,12 @@ export interface Transform {
 	rotate: number;
 }
 
+export interface ColorAdjustments {
+	brightness: number;
+	contrast: number;
+	saturation: number;
+}
+
 export type BlendMode =
 	| "normal"
 	| "darken"
@@ -51,6 +57,18 @@ export function readOpacityFromParams({
 	params: ParamValues;
 }): number {
 	return readNumberParam({ params, key: "opacity", fallback: 1 });
+}
+
+export function readColorAdjustmentsFromParams({
+	params,
+}: {
+	params: ParamValues;
+}): ColorAdjustments {
+	return {
+		brightness: readNumberParam({ params, key: "adjust.brightness", fallback: 100 }),
+		contrast: readNumberParam({ params, key: "adjust.contrast", fallback: 100 }),
+		saturation: readNumberParam({ params, key: "adjust.saturation", fallback: 100 }),
+	};
 }
 
 export function readBlendModeFromParams({

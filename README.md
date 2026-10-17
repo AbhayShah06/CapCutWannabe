@@ -8,21 +8,28 @@ Download the latest Windows installer from [GitHub Releases](https://github.com/
 
 Windows may show a SmartScreen warning because the installer is not code-signed yet. The app runs a private editor server bound to `127.0.0.1` and opens it in its own desktop window. Your projects stay on your computer.
 
-## Included in v0.1
+## Included in v0.2
 
 - Video, image, and audio import with drag and drop
 - Multi-track timeline with trim, split, reorder, snapping, zoom, undo, and redo
-- Text, stickers, transitions, effects, captions, and visual adjustments
-- Landscape, vertical, and square quick-start projects
+- Text, stickers, effects, captions, masks, keyframes, and animation curves
+- Seven editable starter templates for landscape, vertical, square, social hooks, product promos, tutorials, and podcast clips
+- One-click entrance and exit motion presets, including fades, slides, zooms, and pop-ins
+- Editable color looks for clean, vivid, cinematic, soft, monochrome, and muted footage
+- Quick Review, Social, and Master export presets
+- Portable `.ccwproject` files that include the timeline and source media for moving projects between computers
+- Built-in editing guides for pacing, captions, motion, performance, sharing, and keyboard shortcuts
 - Preview canvas and export controls
 - Persistent local projects that survive app updates and uninstall/reinstall unless app data is manually removed
 - Fully dark desktop interface with practical first-run guidance
+- No remote font or analytics dependency in the desktop app
 
 ## Current limitations
 
 - Windows x64 only
 - The installer is unsigned
-- This first release provides project presets, not a full downloadable motion-template marketplace
+- Motion presets animate individual clips; true overlapping cross-clip transitions are still being built
+- Portable projects are optimized for typical edits and currently load the bundle in memory, so extremely large projects should be exported as video instead
 - Optional online sound libraries are disabled in the offline desktop build
 - Large and complex exports still need broader hardware testing
 

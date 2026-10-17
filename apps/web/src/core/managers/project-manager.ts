@@ -30,6 +30,15 @@ import { DEFAULTS } from "@/timeline/defaults";
 import { getElementFontFamilies } from "@/timeline/element-utils";
 import { getRaisedProjectFpsForImportedMedia } from "@/fps/utils";
 import type { MediaAsset } from "@/media/types";
+import {
+	buildSceneFromTemplate,
+	getProjectTemplate,
+	type ProjectTemplateId,
+} from "@/project/templates";
+import {
+	exportPortableProject,
+	importPortableProject,
+} from "@/project/project-bundle";
 
 export interface MigrationState {
 	isMigrating: boolean;
@@ -83,11 +92,17 @@ export class ProjectManager {
 	async createNewProject({
 		name,
 		canvasSize = DEFAULT_CANVAS_SIZE,
+		templateId,
 	}: {
 		name: string;
 		canvasSize?: TCanvasSize;
+		templateId?: ProjectTemplateId;
 	}): Promise<string> {
-		const mainScene = buildDefaultScene({ name: "Main scene", isMain: true });
+		const template = templateId ? getProjectTemplate(templateId) : null;
+		const resolvedCanvasSize = template?.canvasSize ?? canvasSize;
+		const mainScene = templateId
+			? buildSceneFromTemplate({ templateId })
+			: buildDefaultScene({ name: "Main scene", isMain: true });
 		const newProject: TProject = {
 			metadata: {
 				id: generateUUID(),
@@ -100,7 +115,7 @@ export class ProjectManager {
 			currentSceneId: mainScene.id,
 			settings: {
 				fps: DEFAULT_FPS,
-				canvasSize,
+				canvasSize: resolvedCanvasSize,
 				canvasSizeMode: "preset",
 				lastCustomCanvasSize: null,
 				originalCanvasSize: null,
@@ -488,6 +503,17 @@ export class ProjectManager {
 			});
 			throw error;
 		}
+	}
+
+	async exportProjectFile({ id }: { id: string }): Promise<void> {
+		await this.saveCurrentProject();
+		await exportPortableProject({ projectId: id });
+	}
+
+	async importProjectFile({ file }: { file: File }): Promise<string> {
+		const project = await importPortableProject({ file });
+		this.updateMetadata(project);
+		return project.metadata.id;
 	}
 
 	async updateSettings({

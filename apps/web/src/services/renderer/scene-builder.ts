@@ -16,6 +16,7 @@ import {
 	buildTransformFromParams,
 	readBlendModeFromParams,
 	readOpacityFromParams,
+	readColorAdjustmentsFromParams,
 } from "@/rendering";
 
 const PREVIEW_MAX_IMAGE_SIZE = 2048;
@@ -80,6 +81,7 @@ function buildTrackNodes({
 							animations: element.animations,
 							opacity: readOpacityFromParams({ params: element.params }),
 							blendMode: readBlendModeFromParams({ params: element.params }),
+							adjustments: readColorAdjustmentsFromParams({ params: element.params }),
 							effects: element.effects ?? [],
 							masks: element.masks ?? [],
 						}),
@@ -97,6 +99,7 @@ function buildTrackNodes({
 							animations: element.animations,
 							opacity: readOpacityFromParams({ params: element.params }),
 							blendMode: readBlendModeFromParams({ params: element.params }),
+							adjustments: readColorAdjustmentsFromParams({ params: element.params }),
 							effects: element.effects ?? [],
 							masks: element.masks ?? [],
 							...(isPreview && {

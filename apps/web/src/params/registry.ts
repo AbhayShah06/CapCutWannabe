@@ -173,6 +173,39 @@ const audioElementParams: ElementParamDefinition[] = [
 	},
 ];
 
+const colorAdjustmentParams: ElementParamDefinition[] = [
+	{
+		key: "adjust.brightness",
+		label: "Brightness",
+		type: "number",
+		default: 100,
+		min: 0,
+		max: 200,
+		step: 1,
+		keyframable: false,
+	},
+	{
+		key: "adjust.contrast",
+		label: "Contrast",
+		type: "number",
+		default: 100,
+		min: 0,
+		max: 200,
+		step: 1,
+		keyframable: false,
+	},
+	{
+		key: "adjust.saturation",
+		label: "Saturation",
+		type: "number",
+		default: 100,
+		min: 0,
+		max: 200,
+		step: 1,
+		keyframable: false,
+	},
+];
+
 const textElementParams: ElementParamDefinition[] = [
 	{
 		key: "content",
@@ -333,9 +366,9 @@ export const elementParamRegistry = new DefinitionRegistry<
 
 elementParamRegistry.register({
 	key: "video",
-	definition: [...visualElementParams, ...audioElementParams],
+	definition: [...visualElementParams, ...colorAdjustmentParams, ...audioElementParams],
 });
-elementParamRegistry.register({ key: "image", definition: visualElementParams });
+elementParamRegistry.register({ key: "image", definition: [...visualElementParams, ...colorAdjustmentParams] });
 elementParamRegistry.register({
 	key: "text",
 	definition: [...textElementParams, ...visualElementParams],

@@ -240,13 +240,31 @@ async function collectVisualSourceNode({
 			: (node.resolved as ResolvedVisualSourceNodeState).sourceHeight;
 
 	const textureId = `${path}:source`;
-	textures.set(textureId, {
-		kind: "external",
-		id: textureId,
-		source,
-		width: sourceWidth,
-		height: sourceHeight,
-	});
+	const { brightness, contrast, saturation } = node.resolved.adjustments;
+	const hasAdjustments = brightness !== 100 || contrast !== 100 || saturation !== 100;
+	if (hasAdjustments) {
+		textures.set(textureId, {
+			kind: "rendered",
+			id: textureId,
+			contentHash: `adjust:${identityKey(source)}:${node.resolved.localTime}:${brightness}:${contrast}:${saturation}`,
+			width: sourceWidth,
+			height: sourceHeight,
+			draw: (ctx) => {
+				ctx.save();
+				ctx.filter = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
+				ctx.drawImage(source, 0, 0, sourceWidth, sourceHeight);
+				ctx.restore();
+			},
+		});
+	} else {
+		textures.set(textureId, {
+			kind: "external",
+			id: textureId,
+			source,
+			width: sourceWidth,
+			height: sourceHeight,
+		});
+	}
 
 	const transform = computeVisualTransform({
 		renderer,

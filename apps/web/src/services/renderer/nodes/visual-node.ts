@@ -1,7 +1,7 @@
 import { BaseNode } from "./base-node";
 import type { Effect, EffectPass } from "@/effects/types";
 import type { Mask } from "@/masks/types";
-import type { BlendMode, Transform } from "@/rendering";
+import type { BlendMode, ColorAdjustments, Transform } from "@/rendering";
 import type { RetimeConfig, VisualElement } from "@/timeline";
 
 export interface VisualNodeParams {
@@ -14,6 +14,7 @@ export interface VisualNodeParams {
 	animations?: VisualElement["animations"];
 	opacity: number;
 	blendMode?: BlendMode;
+	adjustments?: ColorAdjustments;
 	effects?: Effect[];
 	masks?: Mask[];
 }
@@ -23,6 +24,7 @@ export interface ResolvedVisualNodeState {
 	transform: Transform;
 	opacity: number;
 	effectPasses: EffectPass[][];
+	adjustments: ColorAdjustments;
 }
 
 export interface ResolvedVisualSourceNodeState extends ResolvedVisualNodeState {

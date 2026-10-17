@@ -19,7 +19,7 @@ import {
 	getExportFileExtension,
 	downloadBuffer,
 } from "@/export";
-import { Check, Copy, Download, RotateCcw } from "lucide-react";
+import { Check, Copy, Download, RotateCcw, Smartphone, Zap, Archive } from "lucide-react";
 import {
 	EXPORT_FORMAT_VALUES,
 	EXPORT_QUALITY_VALUES,
@@ -110,6 +110,11 @@ function ExportPopover({
 	const [shouldIncludeAudio, setShouldIncludeAudio] = useState<boolean>(
 		DEFAULT_EXPORT_OPTIONS.includeAudio ?? true,
 	);
+	const exportPresets = [
+		{ name: "Quick review", detail: "Fast and compact", quality: "medium" as const, icon: Zap },
+		{ name: "Social", detail: "Recommended MP4", quality: "high" as const, icon: Smartphone },
+		{ name: "Master", detail: "Maximum quality", quality: "very_high" as const, icon: Archive },
+	];
 
 	const handleExport = async () => {
 		if (!activeProject) return;
@@ -162,6 +167,30 @@ function ExportPopover({
 					<div className="flex flex-col gap-4">
 						{!isExporting && (
 							<>
+								<div className="grid grid-cols-3 gap-2 p-3 pb-0">
+									{exportPresets.map((preset) => (
+										<button
+											type="button"
+											key={preset.name}
+											onClick={() => {
+												setFormat("mp4");
+												setQuality(preset.quality);
+												setShouldIncludeAudio(true);
+											}}
+											className={cn(
+												"flex flex-col items-center gap-1 rounded-lg border p-2 text-center transition hover:bg-accent active:scale-[0.98]",
+												format === "mp4" && quality === preset.quality && "border-sky-400/60 bg-sky-400/10",
+											)}
+										>
+											<preset.icon className="size-4" />
+											<span className="text-[11px] font-medium">{preset.name}</span>
+											<span className="text-muted-foreground text-[9px]">{preset.detail}</span>
+										</button>
+									))}
+								</div>
+								<div className="mx-3 rounded-lg bg-muted/35 px-3 py-2 text-xs text-muted-foreground">
+									{activeProject.settings.canvasSize.width} × {activeProject.settings.canvasSize.height} at {Math.round(activeProject.settings.fps.numerator / activeProject.settings.fps.denominator)} fps
+								</div>
 								<div className="flex flex-col">
 									<Section
 										collapsible
