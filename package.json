@@ -1,6 +1,6 @@
 {
   "name": "capcut-wannabe",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "A fast, private, local-first desktop video editor.",
   "author": "Abhay Shah",
   "main": "desktop/main.cjs",
@@ -90,9 +90,13 @@
     },
     "nsis": {
       "oneClick": false,
+      "perMachine": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
+      "uninstallDisplayName": "CapCutWannabe ${version}",
+      "installerIcon": "apps/web/public/icons/ms-icon-310x310.png",
+      "uninstallerIcon": "apps/web/public/icons/ms-icon-310x310.png",
       "deleteAppDataOnUninstall": false
     },
     "directories": {
