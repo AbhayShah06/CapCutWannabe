@@ -24,7 +24,7 @@ jobs:
           if (!(Test-Path 'apps/web/.next/standalone/apps/web/server.js')) {
             throw 'Desktop server is missing. Refusing to create a broken installer.'
           }
-      - run: bunx electron-builder --win nsis
+      - run: bunx electron-builder --win nsis --publish never
       - name: Verify packaged server and launch
         shell: pwsh
         run: |
