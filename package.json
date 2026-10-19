@@ -1,6 +1,6 @@
 {
   "name": "capcut-wannabe",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "A fast, private, local-first desktop video editor.",
   "author": "Abhay Shah",
   "main": "desktop/main.cjs",
@@ -32,7 +32,7 @@
     "@types/react": "^19.2.10",
     "@types/react-dom": "^19.2.3",
     "better-auth": "^1.4.15",
-    "next": "^16.1.3",
+    "next": "16.2.4",
     "opencut-wasm": "^0.2.10"
   },
   "devDependencies": {
@@ -61,7 +61,8 @@
     "asar": true,
     "files": [
       "desktop/**/*",
-      "package.json"
+      "package.json",
+      "!node_modules/**/*"
     ],
     "extraResources": [
       {
@@ -81,11 +82,13 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
-      "icon": "apps/web/public/icons/ms-icon-310x310.png",
-      "signAndEditExecutable": false,
+      "icon": "branding/icon.ico",
+      "signAndEditExecutable": true,
       "artifactName": "CapCutWannabe-Setup-${version}.${ext}"
     },
     "nsis": {
@@ -95,8 +98,8 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "uninstallDisplayName": "CapCutWannabe ${version}",
-      "installerIcon": "apps/web/public/icons/ms-icon-310x310.png",
-      "uninstallerIcon": "apps/web/public/icons/ms-icon-310x310.png",
+      "installerIcon": "branding/icon.ico",
+      "uninstallerIcon": "branding/icon.ico",
       "deleteAppDataOnUninstall": false
     },
     "directories": {

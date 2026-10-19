@@ -177,12 +177,12 @@ async function createWindow() {
     }
   });
 
-  await mainWindow.loadURL(`http://127.0.0.1:${port}/projects`);
   mainWindow.once("ready-to-show", () => {
     if (savedState.maximized) mainWindow.maximize();
     mainWindow.show();
     void checkForUpdates();
   });
+  await mainWindow.loadURL(`http://127.0.0.1:${port}/projects`);
   mainWindow.on("close", () => saveWindowState(mainWindow));
 }
 
